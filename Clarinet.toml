@@ -1,0 +1,20 @@
+[project]
+name = "pixelstacks"
+description = "PixelStacks NFT Marketplace on Stacks"
+authors = []
+telemetry = false
+cache_dir = "./.clarinet"
+
+[contracts.pixelstacks-nft]
+path = "contracts/pixelstacks-nft.clar"
+clarity_version = 2
+epoch = "2.4"
+
+[repl.analysis]
+passes = ["check_checker"]
+
+[repl.analysis.check_checker]
+strict = false
+trusted_sender = false
+trusted_caller = false
+callee_filter = false
