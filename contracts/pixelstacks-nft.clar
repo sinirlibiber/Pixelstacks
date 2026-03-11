@@ -15,7 +15,6 @@
 
 ;; Data vars
 (define-data-var last-token-id uint u0)
-(define-data-var mint-price uint u1000000)
 (define-data-var max-supply uint u10000)
 (define-data-var royalty-percent uint u5)
 (define-data-var base-uri (string-ascii 256) "https://pixelstacks.io/metadata/")
@@ -41,11 +40,10 @@
     (asserts! (is-none (map-get? marketplace-listings token-id)) ERR-ALREADY-LISTED)
     (nft-transfer? pixelstacks-nft token-id sender recipient)))
 
-;; Mint
+;; Mint (FREE - only gas fee required)
 (define-public (mint (recipient principal))
   (let ((token-id (+ (var-get last-token-id) u1)))
     (asserts! (<= token-id (var-get max-supply)) ERR-MINT-LIMIT)
-    (try! (stx-transfer? (var-get mint-price) tx-sender CONTRACT-OWNER))
     (try! (nft-mint? pixelstacks-nft token-id recipient))
     (map-set token-owner token-id recipient)
     (map-set creator-royalties token-id recipient)
@@ -100,9 +98,6 @@
 (define-read-only (get-listing (token-id uint))
   (map-get? marketplace-listings token-id))
 
-(define-read-only (get-mint-price)
-  (var-get mint-price))
-
 (define-read-only (get-total-supply)
   (var-get last-token-id))
 
@@ -110,12 +105,6 @@
   (var-get max-supply))
 
 ;; Admin functions
-(define-public (set-mint-price (new-price uint))
-  (begin
-    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
-    (var-set mint-price new-price)
-    (ok true)))
-
 (define-public (set-base-uri (new-uri (string-ascii 256)))
   (begin
     (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
