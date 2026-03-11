@@ -11,6 +11,7 @@ export default function Document() {
           rel="stylesheet"
         />
         <meta name="theme-color" content="#0a0a0f" />
+        <meta name="talentapp:project_verification" content="7646666f96098537be943bfe62838d7a3fa116811118fb52c2528603305aadd4048c11b94334ce580659936142f2b2437a4a7ad559fcf010a3796a11ebaa2f99" />
       </Head>
       <body>
         <Main />
