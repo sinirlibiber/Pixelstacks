@@ -2,7 +2,7 @@
 ;; SIP-009 compliant NFT contract
 
 ;; Define NFT
-(define-non-fungible-token pixelstacks-nft uint)
+(define-non-fungible-token pixelstacks-nft-v2 uint)
 
 ;; Constants
 (define-constant CONTRACT-OWNER tx-sender)
@@ -32,19 +32,19 @@
   (ok (some (var-get base-uri))))
 
 (define-read-only (get-owner (token-id uint))
-  (ok (nft-get-owner? pixelstacks-nft token-id)))
+  (ok (nft-get-owner? pixelstacks-nft-v2 token-id)))
 
 (define-public (transfer (token-id uint) (sender principal) (recipient principal))
   (begin
     (asserts! (is-eq tx-sender sender) ERR-NOT-AUTHORIZED)
     (asserts! (is-none (map-get? marketplace-listings token-id)) ERR-ALREADY-LISTED)
-    (nft-transfer? pixelstacks-nft token-id sender recipient)))
+    (nft-transfer? pixelstacks-nft-v2 token-id sender recipient)))
 
 ;; Mint (FREE - only gas fee required)
 (define-public (mint (recipient principal))
   (let ((token-id (+ (var-get last-token-id) u1)))
     (asserts! (<= token-id (var-get max-supply)) ERR-MINT-LIMIT)
-    (try! (nft-mint? pixelstacks-nft token-id recipient))
+    (try! (nft-mint? pixelstacks-nft-v2 token-id recipient))
     (map-set token-owner token-id recipient)
     (map-set creator-royalties token-id recipient)
     (var-set last-token-id token-id)
@@ -55,7 +55,7 @@
   (let ((token-id (+ (var-get last-token-id) u1)))
     (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
     (asserts! (<= token-id (var-get max-supply)) ERR-MINT-LIMIT)
-    (try! (nft-mint? pixelstacks-nft token-id recipient))
+    (try! (nft-mint? pixelstacks-nft-v2 token-id recipient))
     (map-set token-owner token-id recipient)
     (map-set creator-royalties token-id recipient)
     (var-set last-token-id token-id)
@@ -63,7 +63,7 @@
 
 ;; List NFT
 (define-public (list-nft (token-id uint) (price uint))
-  (let ((owner (unwrap! (nft-get-owner? pixelstacks-nft token-id) ERR-NOT-FOUND)))
+  (let ((owner (unwrap! (nft-get-owner? pixelstacks-nft-v2 token-id) ERR-NOT-FOUND)))
     (asserts! (is-eq tx-sender owner) ERR-NOT-AUTHORIZED)
     (asserts! (is-none (map-get? marketplace-listings token-id)) ERR-ALREADY-LISTED)
     (asserts! (> price u0) ERR-WRONG-PRICE)
@@ -89,7 +89,7 @@
     (asserts! (not (is-eq tx-sender seller)) ERR-NOT-AUTHORIZED)
     (try! (stx-transfer? royalty-amount tx-sender creator))
     (try! (stx-transfer? seller-amount tx-sender seller))
-    (try! (nft-transfer? pixelstacks-nft token-id seller tx-sender))
+    (try! (nft-transfer? pixelstacks-nft-v2 token-id seller tx-sender))
     (map-delete marketplace-listings token-id)
     (map-set token-owner token-id tx-sender)
     (ok true)))
