@@ -1,8 +1,6 @@
 ;; PixelStacks NFT Contract
 ;; SIP-009 compliant NFT contract
 
-(impl-trait 'SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait.nft-trait)
-
 ;; Define NFT
 (define-non-fungible-token pixelstacks-nft uint)
 
@@ -14,155 +12,112 @@
 (define-constant ERR-NOT-LISTED (err u103))
 (define-constant ERR-WRONG-PRICE (err u104))
 (define-constant ERR-MINT-LIMIT (err u105))
-(define-constant ERR-TRANSFER-FAILED (err u106))
 
 ;; Data vars
 (define-data-var last-token-id uint u0)
-(define-data-var mint-price uint u1000000) ;; 1 STX in microSTX
+(define-data-var mint-price uint u1000000)
 (define-data-var max-supply uint u10000)
-(define-data-var royalty-percent uint u5) ;; 5%
+(define-data-var royalty-percent uint u5)
 (define-data-var base-uri (string-ascii 256) "https://pixelstacks.io/metadata/")
 
 ;; Data maps
 (define-map token-owner uint principal)
-(define-map marketplace-listings
-  uint
-  {
-    price: uint,
-    seller: principal
-  }
-)
+(define-map marketplace-listings uint { price: uint, seller: principal })
 (define-map creator-royalties uint principal)
 
 ;; SIP-009 Functions
-
 (define-read-only (get-last-token-id)
-  (ok (var-get last-token-id))
-)
+  (ok (var-get last-token-id)))
 
 (define-read-only (get-token-uri (token-id uint))
-  (ok (some (var-get base-uri)))
-)
+  (ok (some (var-get base-uri))))
 
 (define-read-only (get-owner (token-id uint))
-  (ok (nft-get-owner? pixelstacks-nft token-id))
-)
+  (ok (nft-get-owner? pixelstacks-nft token-id)))
 
 (define-public (transfer (token-id uint) (sender principal) (recipient principal))
   (begin
     (asserts! (is-eq tx-sender sender) ERR-NOT-AUTHORIZED)
     (asserts! (is-none (map-get? marketplace-listings token-id)) ERR-ALREADY-LISTED)
-    (nft-transfer? pixelstacks-nft token-id sender recipient)
-  )
-)
+    (nft-transfer? pixelstacks-nft token-id sender recipient)))
 
-;; Mint Function
+;; Mint
 (define-public (mint (recipient principal))
-  (let
-    (
-      (token-id (+ (var-get last-token-id) u1))
-    )
+  (let ((token-id (+ (var-get last-token-id) u1)))
     (asserts! (<= token-id (var-get max-supply)) ERR-MINT-LIMIT)
     (try! (stx-transfer? (var-get mint-price) tx-sender CONTRACT-OWNER))
     (try! (nft-mint? pixelstacks-nft token-id recipient))
     (map-set token-owner token-id recipient)
     (map-set creator-royalties token-id recipient)
     (var-set last-token-id token-id)
-    (ok token-id)
-  )
-)
+    (ok token-id)))
 
-;; Admin mint (free, only owner)
+;; Admin mint
 (define-public (admin-mint (recipient principal))
-  (let
-    (
-      (token-id (+ (var-get last-token-id) u1))
-    )
+  (let ((token-id (+ (var-get last-token-id) u1)))
     (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
     (asserts! (<= token-id (var-get max-supply)) ERR-MINT-LIMIT)
     (try! (nft-mint? pixelstacks-nft token-id recipient))
     (map-set token-owner token-id recipient)
     (map-set creator-royalties token-id recipient)
     (var-set last-token-id token-id)
-    (ok token-id)
-  )
-)
+    (ok token-id)))
 
-;; Marketplace: List NFT for sale
+;; List NFT
 (define-public (list-nft (token-id uint) (price uint))
   (let ((owner (unwrap! (nft-get-owner? pixelstacks-nft token-id) ERR-NOT-FOUND)))
     (asserts! (is-eq tx-sender owner) ERR-NOT-AUTHORIZED)
     (asserts! (is-none (map-get? marketplace-listings token-id)) ERR-ALREADY-LISTED)
     (asserts! (> price u0) ERR-WRONG-PRICE)
     (map-set marketplace-listings token-id { price: price, seller: tx-sender })
-    (ok true)
-  )
-)
+    (ok true)))
 
-;; Marketplace: Unlist NFT
+;; Unlist NFT
 (define-public (unlist-nft (token-id uint))
   (let ((listing (unwrap! (map-get? marketplace-listings token-id) ERR-NOT-LISTED)))
     (asserts! (is-eq tx-sender (get seller listing)) ERR-NOT-AUTHORIZED)
     (map-delete marketplace-listings token-id)
-    (ok true)
-  )
-)
+    (ok true)))
 
-;; Marketplace: Buy NFT
+;; Buy NFT
 (define-public (buy-nft (token-id uint))
-  (let
-    (
-      (listing (unwrap! (map-get? marketplace-listings token-id) ERR-NOT-LISTED))
-      (price (get price listing))
-      (seller (get seller listing))
-      (creator (unwrap! (map-get? creator-royalties token-id) ERR-NOT-FOUND))
-      (royalty-amount (/ (* price (var-get royalty-percent)) u100))
-      (seller-amount (- price royalty-amount))
-    )
+  (let (
+    (listing (unwrap! (map-get? marketplace-listings token-id) ERR-NOT-LISTED))
+    (price (get price listing))
+    (seller (get seller listing))
+    (creator (unwrap! (map-get? creator-royalties token-id) ERR-NOT-FOUND))
+    (royalty-amount (/ (* price (var-get royalty-percent)) u100))
+    (seller-amount (- price royalty-amount)))
     (asserts! (not (is-eq tx-sender seller)) ERR-NOT-AUTHORIZED)
     (try! (stx-transfer? royalty-amount tx-sender creator))
     (try! (stx-transfer? seller-amount tx-sender seller))
     (try! (nft-transfer? pixelstacks-nft token-id seller tx-sender))
     (map-delete marketplace-listings token-id)
     (map-set token-owner token-id tx-sender)
-    (ok true)
-  )
-)
+    (ok true)))
 
-;; Read: Get listing info
+;; Read functions
 (define-read-only (get-listing (token-id uint))
-  (map-get? marketplace-listings token-id)
-)
+  (map-get? marketplace-listings token-id))
 
-;; Read: Get mint price
 (define-read-only (get-mint-price)
-  (var-get mint-price)
-)
+  (var-get mint-price))
 
-;; Read: Get total supply
 (define-read-only (get-total-supply)
-  (var-get last-token-id)
-)
+  (var-get last-token-id))
 
-;; Read: Get max supply
 (define-read-only (get-max-supply)
-  (var-get max-supply)
-)
+  (var-get max-supply))
 
-;; Admin: Update mint price
+;; Admin functions
 (define-public (set-mint-price (new-price uint))
   (begin
     (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
     (var-set mint-price new-price)
-    (ok true)
-  )
-)
+    (ok true)))
 
-;; Admin: Update base URI
 (define-public (set-base-uri (new-uri (string-ascii 256)))
   (begin
     (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
     (var-set base-uri new-uri)
-    (ok true)
-  )
-)
+    (ok true)))
