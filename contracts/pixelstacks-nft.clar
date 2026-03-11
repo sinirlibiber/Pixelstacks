@@ -21,10 +21,9 @@
 (define-data-var mint-price uint u1000000) ;; 1 STX in microSTX
 (define-data-var max-supply uint u10000)
 (define-data-var royalty-percent uint u5) ;; 5%
-(define-data-var base-uri (string-ascii 200) "https://pixelstacks.io/metadata/")
+(define-data-var base-uri (string-ascii 256) "https://pixelstacks.io/metadata/")
 
 ;; Data maps
-(define-map token-uri uint (string-ascii 200))
 (define-map token-owner uint principal)
 (define-map marketplace-listings
   uint
@@ -42,7 +41,7 @@
 )
 
 (define-read-only (get-token-uri (token-id uint))
-  (ok (some (unwrap-panic (map-get? token-uri token-id))))
+  (ok (some (var-get base-uri)))
 )
 
 (define-read-only (get-owner (token-id uint))
@@ -62,12 +61,10 @@
   (let
     (
       (token-id (+ (var-get last-token-id) u1))
-      (uri (concat (var-get base-uri) (uint-to-ascii token-id)))
     )
     (asserts! (<= token-id (var-get max-supply)) ERR-MINT-LIMIT)
     (try! (stx-transfer? (var-get mint-price) tx-sender CONTRACT-OWNER))
     (try! (nft-mint? pixelstacks-nft token-id recipient))
-    (map-set token-uri token-id uri)
     (map-set token-owner token-id recipient)
     (map-set creator-royalties token-id recipient)
     (var-set last-token-id token-id)
@@ -80,12 +77,10 @@
   (let
     (
       (token-id (+ (var-get last-token-id) u1))
-      (uri (concat (var-get base-uri) (uint-to-ascii token-id)))
     )
     (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
     (asserts! (<= token-id (var-get max-supply)) ERR-MINT-LIMIT)
     (try! (nft-mint? pixelstacks-nft token-id recipient))
-    (map-set token-uri token-id uri)
     (map-set token-owner token-id recipient)
     (map-set creator-royalties token-id recipient)
     (var-set last-token-id token-id)
@@ -125,11 +120,8 @@
       (seller-amount (- price royalty-amount))
     )
     (asserts! (not (is-eq tx-sender seller)) ERR-NOT-AUTHORIZED)
-    ;; Pay royalty to original creator
     (try! (stx-transfer? royalty-amount tx-sender creator))
-    ;; Pay remaining to seller
     (try! (stx-transfer? seller-amount tx-sender seller))
-    ;; Transfer NFT
     (try! (nft-transfer? pixelstacks-nft token-id seller tx-sender))
     (map-delete marketplace-listings token-id)
     (map-set token-owner token-id tx-sender)
@@ -167,42 +159,10 @@
 )
 
 ;; Admin: Update base URI
-(define-public (set-base-uri (new-uri (string-ascii 200)))
+(define-public (set-base-uri (new-uri (string-ascii 256)))
   (begin
     (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
     (var-set base-uri new-uri)
     (ok true)
-  )
-)
-
-;; Helper: uint to ascii (simple version for token IDs up to 9999)
-(define-private (uint-to-ascii (value uint))
-  (if (<= value u9)
-    (unwrap-panic (element-at "0123456789" value))
-    (if (<= value u99)
-      (concat
-        (unwrap-panic (element-at "0123456789" (/ value u10)))
-        (unwrap-panic (element-at "0123456789" (mod value u10)))
-      )
-      (if (<= value u999)
-        (concat
-          (concat
-            (unwrap-panic (element-at "0123456789" (/ value u100)))
-            (unwrap-panic (element-at "0123456789" (/ (mod value u100) u10)))
-          )
-          (unwrap-panic (element-at "0123456789" (mod value u10)))
-        )
-        (concat
-          (concat
-            (concat
-              (unwrap-panic (element-at "0123456789" (/ value u1000)))
-              (unwrap-panic (element-at "0123456789" (/ (mod value u1000) u100)))
-            )
-            (unwrap-panic (element-at "0123456789" (/ (mod value u100) u10)))
-          )
-          (unwrap-panic (element-at "0123456789" (mod value u10)))
-        )
-      )
-    )
   )
 )
