@@ -5,8 +5,8 @@ authors = []
 telemetry = false
 cache_dir = "./.clarinet"
 
-[contracts.pixelstacks-nft]
-path = "contracts/pixelstacks-nft.clar"
+[contracts.pixelstacks-nft-v2]
+path = "contracts/pixelstacks-nft-v2.clar"
 clarity_version = 2
 epoch = "2.4"
 

@@ -11,7 +11,7 @@ const isMainnet = process.env.NEXT_PUBLIC_STACKS_NETWORK === 'mainnet';
 export const network = isMainnet ? new StacksMainnet() : new StacksTestnet();
 
 export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || 'SP38Q50GFD6PDP895EDB1Z4B64NCG9763QFS663G7';
-export const CONTRACT_NAME = 'pixelstacks-nft';
+export const CONTRACT_NAME = 'pixelstacks-nft-v2';
 
 interface WalletContextType {
   isConnected: boolean;

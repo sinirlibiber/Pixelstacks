@@ -9,10 +9,10 @@ plan:
     - id: 0
       transactions:
         - contract-publish:
-            contract-name: pixelstacks-nft
+            contract-name: pixelstacks-nft-v2
             expected-sender: SPPWXKA3C1GXMTXMHQDQ8QF12BKSF8ZJT79Z7NXT
             cost: 42000
-            path: contracts/pixelstacks-nft.clar
+            path: contracts/pixelstacks-nft-v2.clar
             anchor-block-only: true
             clarity-version: 2
       epoch: "2.4"
