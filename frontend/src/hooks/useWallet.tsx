@@ -6,11 +6,11 @@ import { StacksMainnet, StacksTestnet } from '@stacks/network';
 const appConfig = new AppConfig(['store_write', 'publish_data']);
 export const userSession = new UserSession({ appConfig });
 
-export const network = process.env.NEXT_PUBLIC_STACKS_NETWORK === 'mainnet'
-  ? new StacksMainnet()
-  : new StacksTestnet();
+const isMainnet = process.env.NEXT_PUBLIC_STACKS_NETWORK === 'mainnet';
 
-export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM';
+export const network = isMainnet ? new StacksMainnet() : new StacksTestnet();
+
+export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || 'SP38Q50GFD6PDP895EDB1Z4B64NCG9763QFS663G7';
 export const CONTRACT_NAME = 'pixelstacks-nft';
 
 interface WalletContextType {
@@ -39,7 +39,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       const data = userSession.loadUserData();
       setIsConnected(true);
       setUserData(data);
-      setAddress(data.profile.stxAddress.testnet);
+      // mainnet adresi SP... ile başlar, testnet ST... ile
+      setAddress(isMainnet ? data.profile.stxAddress.mainnet : data.profile.stxAddress.testnet);
     }
   }, []);
 
@@ -54,7 +55,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         const data = userSession.loadUserData();
         setIsConnected(true);
         setUserData(data);
-        setAddress(data.profile.stxAddress.testnet);
+        setAddress(isMainnet ? data.profile.stxAddress.mainnet : data.profile.stxAddress.testnet);
       },
       userSession,
     });
