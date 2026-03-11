@@ -10,8 +10,8 @@ plan:
       transactions:
         - contract-publish:
             contract-name: pixelstacks-nft
-            expected-sender: ST5GR8ZDZWP7X5X0H4561ZM3N990BEXSD5C8TB53
-            cost: 64030
+            expected-sender: ST1W6P26FG8CGQ4RMAWG15XRPHZ0TXS174ZJSSWP9
+            cost: 49760
             path: contracts/pixelstacks-nft.clar
             anchor-block-only: true
             clarity-version: 2
