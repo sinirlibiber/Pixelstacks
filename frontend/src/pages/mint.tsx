@@ -5,6 +5,10 @@ import { useWallet } from '@/hooks/useWallet';
 import { useContractActions } from '@/hooks/useContract';
 import { Zap, Info, CheckCircle2, Loader2, ExternalLink } from 'lucide-react';
 
+const EXPLORER_BASE = process.env.NEXT_PUBLIC_STACKS_NETWORK === 'mainnet'
+  ? 'https://explorer.hiro.so'
+  : 'https://explorer.hiro.so';
+
 export default function Mint() {
   const { isConnected, address, connect } = useWallet();
   const { mintNFT } = useContractActions();
@@ -23,6 +27,8 @@ export default function Mint() {
       setLoading(false);
     }
   };
+
+  const network = process.env.NEXT_PUBLIC_STACKS_NETWORK || 'mainnet';
 
   return (
     <>
@@ -50,7 +56,6 @@ export default function Mint() {
                 </div>
               </div>
 
-              {/* Properties */}
               <div className="bg-ps-surface border border-ps-border rounded-2xl p-5">
                 <h3 className="text-sm font-semibold text-ps-text mb-3">Collection Info</h3>
                 <div className="grid grid-cols-2 gap-3 text-sm">
@@ -88,15 +93,21 @@ export default function Mint() {
               <div className="bg-ps-surface border border-ps-border rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-ps-muted text-sm">Mint Price</span>
-                  <span className="text-2xl font-bold text-ps-text">1 STX</span>
+                  <div className="flex items-center gap-2">
+                    <span className="tag tag-green text-sm">FREE MINT</span>
+                  </div>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-ps-muted">Network</span>
-                  <span className="text-ps-accent2">Stacks Testnet</span>
+                  <span className="text-ps-accent2">Stacks Mainnet</span>
                 </div>
                 <div className="flex items-center justify-between text-sm mt-2">
                   <span className="text-ps-muted">Blockchain</span>
                   <span className="text-ps-text">Bitcoin (via Stacks)</span>
+                </div>
+                <div className="flex items-center justify-between text-sm mt-2">
+                  <span className="text-ps-muted">Gas fee only</span>
+                  <span className="text-ps-muted">~0.001 STX</span>
                 </div>
               </div>
 
@@ -116,7 +127,7 @@ export default function Mint() {
                   <div>
                     <p className="text-sm text-green-400 font-medium">Mint submitted!</p>
                     <a
-                      href={`https://explorer.hiro.so/txid/${txId}?chain=testnet`}
+                      href={`${EXPLORER_BASE}/txid/${txId}?chain=${network}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs text-ps-muted hover:text-ps-text flex items-center gap-1 mt-1"
@@ -150,14 +161,14 @@ export default function Mint() {
                   ) : (
                     <>
                       <Zap size={18} />
-                      Mint for 1 STX
+                      Mint for FREE
                     </>
                   )}
                 </button>
               )}
 
               <p className="text-xs text-center text-ps-muted">
-                By minting, you agree to our Terms of Service. All sales are final.
+                By minting, you agree to our Terms of Service. Only gas fee (~0.001 STX) required.
               </p>
             </div>
           </div>
