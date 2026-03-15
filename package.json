@@ -1,15 +1,35 @@
 {
-  "name": "pixelstacks-automint",
+  "name": "skillswap-frontend",
   "version": "1.0.0",
-  "description": "PixelStacks NFT otomatik mint scripti",
-  "main": "auto-mint.js",
+  "private": true,
   "scripts": {
-    "start": "node auto-mint.js",
-    "mint": "node auto-mint.js"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "dependencies": {
-    "@stacks/transactions": "^6.17.0",
-    "@stacks/network": "^6.13.0",
-    "@stacks/wallet-sdk": "^6.17.0"
+    "next": "14.2.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "@coinbase/onchainkit": "0.35.8",
+    "wagmi": "^2.12.0",
+    "viem": "^2.21.0",
+    "@tanstack/react-query": "^5.55.0",
+    "framer-motion": "^11.3.0",
+    "lucide-react": "^0.447.0",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.5.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.0",
+    "typescript": "^5",
+    "tailwindcss": "^3.4.1",
+    "autoprefixer": "^10.0.1",
+    "postcss": "^8"
   }
 }
