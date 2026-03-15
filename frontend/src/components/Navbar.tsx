@@ -44,6 +44,13 @@ export default function Navbar() {
             <Link href="/auto-mint" className="text-ps-muted hover:text-ps-text transition-colors text-sm font-medium">
               Auto Mint
             </Link>
+            <Link
+              href="/multi-mint"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-gradient-to-r from-purple-600 to-ps-accent text-white hover:opacity-90 transition-opacity"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Multi Mint
+            </Link>
             {isConnected && (
               <Link href="/my-nfts" className="text-ps-muted hover:text-ps-text transition-colors text-sm font-medium">
                 My NFTs
@@ -98,6 +105,7 @@ export default function Navbar() {
           <Link href="/explore" className="block text-ps-muted hover:text-ps-text py-2">Explore</Link>
           <Link href="/mint" className="block text-ps-muted hover:text-ps-text py-2">Mint</Link>
           <Link href="/auto-mint" className="block text-ps-muted hover:text-ps-text py-2">Auto Mint</Link>
+          <Link href="/multi-mint" className="block py-2 font-semibold text-purple-400">⚡ Multi Mint</Link>
           {isConnected && (
             <Link href="/my-nfts" className="block text-ps-muted hover:text-ps-text py-2">My NFTs</Link>
           )}
