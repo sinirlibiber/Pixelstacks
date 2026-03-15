@@ -41,6 +41,9 @@ export default function Navbar() {
             <Link href="/mint" className="text-ps-muted hover:text-ps-text transition-colors text-sm font-medium">
               Mint
             </Link>
+            <Link href="/auto-mint" className="text-ps-muted hover:text-ps-text transition-colors text-sm font-medium">
+              Auto Mint
+            </Link>
             {isConnected && (
               <Link href="/my-nfts" className="text-ps-muted hover:text-ps-text transition-colors text-sm font-medium">
                 My NFTs
@@ -94,6 +97,7 @@ export default function Navbar() {
         <div className="md:hidden border-t border-ps-border bg-ps-surface px-4 py-4 space-y-3">
           <Link href="/explore" className="block text-ps-muted hover:text-ps-text py-2">Explore</Link>
           <Link href="/mint" className="block text-ps-muted hover:text-ps-text py-2">Mint</Link>
+          <Link href="/auto-mint" className="block text-ps-muted hover:text-ps-text py-2">Auto Mint</Link>
           {isConnected && (
             <Link href="/my-nfts" className="block text-ps-muted hover:text-ps-text py-2">My NFTs</Link>
           )}
