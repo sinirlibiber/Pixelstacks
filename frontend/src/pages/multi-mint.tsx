@@ -31,8 +31,8 @@ interface Stats {
 const DEFAULT_STX_PER_WALLET = 0.15;   // Her alt cüzdana gönderilecek STX
 const DEFAULT_MINTS_PER_WALLET = 50;   // Her alt cüzdan kaç mint atacak
 const DEFAULT_PARALLEL_WORKERS = 5;   // Kaç cüzdan paralel çalışacak
-const MINT_FEE = 2_000n;               // 0.002 STX
-const TRANSFER_FEE = 1_500n;           // 0.0015 STX
+const MINT_FEE = BigInt(2000);         // 0.002 STX
+const TRANSFER_FEE = BigInt(1500);     // 0.0015 STX
 const FUNDING_CONFIRM_DELAY = 12_000;  // 12 saniye fonlama onayı
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
@@ -93,7 +93,7 @@ export default function MultiMintPage() {
       const res = await fetch(`https://api.mainnet.hiro.so/v2/accounts/${address}?unanchored=true`);
       const d = await res.json();
       return BigInt(d.balance ?? '0');
-    } catch { return 0n; }
+    } catch { return BigInt(0); }
   };
 
   const sendSTX = async (fromKey: string, toAddress: string, amount: bigint, nonce: number): Promise<{ ok: boolean; txid?: string; error?: string }> => {
