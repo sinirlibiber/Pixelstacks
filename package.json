@@ -1,0 +1,15 @@
+{
+  "name": "pixelstacks-automint",
+  "version": "1.0.0",
+  "description": "PixelStacks NFT otomatik mint scripti",
+  "main": "auto-mint.js",
+  "scripts": {
+    "start": "node auto-mint.js",
+    "mint": "node auto-mint.js"
+  },
+  "dependencies": {
+    "@stacks/transactions": "^6.17.0",
+    "@stacks/network": "^6.13.0",
+    "@stacks/wallet-sdk": "^6.17.0"
+  }
+}

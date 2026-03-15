@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelStacks Auto-Mint</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, sans-serif; background: #0f0f0f; color: #e8e8e8; min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 2rem 1rem; }
+.container { width: 100%; max-width: 520px; }
+h1 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+.sub { font-size: 12px; color: #888; margin-bottom: 20px; }
+.card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+.label { font-size: 11px; color: #888; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid #333; background: #111; color: #e8e8e8; font-size: 13px; font-family: monospace; outline: none; }
+input:focus { border-color: #555; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.btn-start { width: 100%; padding: 12px; background: #e8e8e8; color: #111; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 4px; }
+.btn-start:disabled { opacity: 0.3; cursor: not-allowed; }
+.btn-stop { width: 100%; padding: 12px; background: transparent; color: #f87171; border: 1px solid #f87171; border-radius: 8px; font-size: 14px; cursor: pointer; margin-top: 8px; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+.stat { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 10px 12px; }
+.stat-val { font-size: 20px; font-weight: 600; }
+.stat-lbl { font-size: 10px; color: #888; margin-top: 2px; text-transform: uppercase; }
+.prog-wrap { background: #1a1a1a; border-radius: 99px; height: 5px; margin: 0 0 6px; }
+.prog-bar { height: 100%; background: #e8e8e8; border-radius: 99px; width: 0%; transition: width 0.2s; }
+.prog-txt { font-size: 11px; color: #666; text-align: right; margin-bottom: 12px; }
+.log-box { background: #111; border: 1px solid #222; border-radius: 8px; padding: 10px 12px; height: 180px; overflow-y: auto; font-family: monospace; font-size: 12px; color: #888; }
+.log-ok { color: #4ade80; }
+.log-err { color: #f87171; }
+.log-info { color: #888; }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 500; }
+.badge-idle { background: #222; color: #888; }
+.badge-running { background: #422006; color: #fb923c; }
+.badge-done { background: #052e16; color: #4ade80; }
+.badge-stop { background: #2d0f0f; color: #f87171; }
+.header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+.warn { background: #1c1505; border: 1px solid #422006; border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #fb923c; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div>
+      <h1>PixelStacks Auto-Mint</h1>
+      <div class="sub">Mainnet · pixelstacks-nft-v2 · SP38Q50GFD6PDP895EDB1Z4B64NCG9763QFS663G7</div>
+    </div>
+    <span class="badge badge-idle" id="status-badge">Hazır</span>
+  </div>
+
+  <div class="warn">
+    Seed phrase yalnızca tarayıcında çalışır, hiçbir sunucuya gönderilmez. Yine de mint için ayrı bir cüzdan kullan.
+  </div>
+
+  <div class="card">
+    <div class="label">Seed Phrase (12 veya 24 kelime)</div>
+    <input type="password" id="mnemonic" placeholder="word1 word2 word3 ..." autocomplete="off" />
+    <div style="font-size:11px;color:#666;margin-top:6px;">Adres otomatik türetilir (account 0, path m/44'/5757'/0'/0/0)</div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <div class="label">Toplam TX</div>
+        <input type="number" id="total-tx" value="5000" min="1" max="10000" />
+      </div>
+      <div>
+        <div class="label">TX arası (ms)</div>
+        <input type="number" id="delay" value="200" min="50" />
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="label">Recipient adresi (boş = kendi cüzdanın)</div>
+      <input type="text" id="recipient" placeholder="SP... (opsiyonel)" />
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-val" id="s-sent">0</div><div class="stat-lbl">Gönderildi</div></div>
+    <div class="stat"><div class="stat-val" id="s-ok" style="color:#4ade80">0</div><div class="stat-lbl">Başarılı</div></div>
+    <div class="stat"><div class="stat-val" id="s-err" style="color:#f87171">0</div><div class="stat-lbl">Hatalı</div></div>
+    <div class="stat"><div class="stat-val" id="s-eta">—</div><div class="stat-lbl">Kalan</div></div>
+  </div>
+
+  <div class="prog-wrap"><div class="prog-bar" id="prog"></div></div>
+  <div class="prog-txt" id="prog-txt">0 / 0</div>
+
+  <div class="log-box" id="log-box">
+    <div class="log-info">— Bekleniyor —</div>
+  </div>
+
+  <button class="btn-start" id="btn-start" onclick="startMint()">Mint Başlat</button>
+  <button class="btn-stop" id="btn-stop" style="display:none" onclick="stopMint()">Durdur</button>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@stacks/transactions@6.17.0/dist/umd/transactions.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@stacks/network@6.13.0/dist/umd/network.js"></script>
+
+<script>
+const CONTRACT_ADDRESS = "SP38Q50GFD6PDP895EDB1Z4B64NCG9763QFS663G7";
+const CONTRACT_NAME    = "pixelstacks-nft-v2";
+const FUNCTION_NAME    = "mint";
+
+let running = false, stopFlag = false, startTime = null;
+
+function log(msg, type = "info") {
+  const box = document.getElementById("log-box");
+  const d = document.createElement("div");
+  d.className = "log-" + type;
+  const ts = new Date().toLocaleTimeString("tr-TR");
+  d.textContent = "[" + ts + "] " + msg;
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
+  if (box.children.length > 300) box.removeChild(box.children[0]);
+}
+
+function setStatus(text, cls) {
+  const b = document.getElementById("status-badge");
+  b.textContent = text;
+  b.className = "badge " + cls;
+}
+
+function formatETA(ms) {
+  if (!ms || ms < 0) return "—";
+  const s = Math.round(ms / 1000);
+  if (s < 60) return s + "sn";
+  const m = Math.floor(s / 60);
+  if (m < 60) return m + "dk " + (s % 60) + "sn";
+  return Math.floor(m/60) + "s " + (m%60) + "dk";
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function getNonce(address) {
+  const res = await fetch("https://api.mainnet.hiro.so/v2/accounts/" + address + "?unanchored=true");
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  const d = await res.json();
+  return parseInt(d.nonce);
+}
+
+async function deriveAccount(mnemonic) {
+  const words = mnemonic.trim().split(/\s+/);
+  if (words.length !== 12 && words.length !== 24) throw new Error("Seed phrase 12 veya 24 kelime olmalı");
+
+  const bip39  = await import("https://esm.sh/bip39@3.1.0");
+  const bip32  = await import("https://esm.sh/@scure/bip32@1.3.1");
+
+  const { createStacksPrivateKey, getPublicKey, publicKeyToAddress, TransactionVersion } = StacksTransactions;
+
+  const seed   = await bip39.mnemonicToSeed(mnemonic.trim());
+  const root   = bip32.HDKey.fromMasterSeed(seed);
+  const child  = root.derive("m/44'/5757'/0'/0/0");
+  const privHex = Buffer.from(child.privateKey).toString("hex") + "01";
+  const pubKey  = getPublicKey(createStacksPrivateKey(privHex));
+  const address = publicKeyToAddress(TransactionVersion.Mainnet, pubKey);
+
+  return { privateKey: privHex, address };
+}
+
+async function mintOne(privateKey, recipientAddr, nonce) {
+  const { makeContractCall, broadcastTransaction, AnchorMode, PostConditionMode, principalCV } = StacksTransactions;
+  const network = new StacksNetwork.StacksMainnet();
+
+  const tx = await makeContractCall({
+    contractAddress: CONTRACT_ADDRESS,
+    contractName:    CONTRACT_NAME,
+    functionName:    FUNCTION_NAME,
+    functionArgs:    [principalCV(recipientAddr)],
+    senderKey:       privateKey,
+    network,
+    nonce:           BigInt(nonce),
+    anchorMode:      AnchorMode.Any,
+    postConditionMode: PostConditionMode.Allow,
+    fee:             BigInt(2000),
+  });
+
+  const result = await broadcastTransaction(tx, network);
+  if (result.error) throw new Error(result.error + (result.reason ? " (" + result.reason + ")" : ""));
+  return result.txid;
+}
+
+async function startMint() {
+  if (running) return;
+
+  const mnemonic  = document.getElementById("mnemonic").value.trim();
+  const totalTx   = parseInt(document.getElementById("total-tx").value);
+  const delay     = parseInt(document.getElementById("delay").value);
+  const recipientInput = document.getElementById("recipient").value.trim();
+
+  if (!mnemonic)            { log("Seed phrase boş!", "err"); return; }
+  if (!totalTx || totalTx < 1) { log("Geçersiz TX sayısı", "err"); return; }
+  if (typeof StacksTransactions === "undefined") { log("Kütüphaneler henüz yüklenmedi, 2 sn bekle.", "err"); return; }
+
+  running = true; stopFlag = false; startTime = Date.now();
+  document.getElementById("btn-start").disabled = true;
+  document.getElementById("btn-stop").style.display = "block";
+  document.getElementById("log-box").innerHTML = "";
+  setStatus("Çalışıyor", "badge-running");
+
+  let privateKey, address;
+  try {
+    ({ privateKey, address } = await deriveAccount(mnemonic));
+    log("Adres: " + address, "ok");
+  } catch (e) {
+    log("Adres türetilemedi: " + e.message, "err");
+    resetUI(); return;
+  }
+
+  const recipient = recipientInput || address;
+  log("Recipient: " + recipient, "info");
+
+  let nonce;
+  try {
+    nonce = await getNonce(address);
+    log("Nonce: " + nonce, "info");
+    log("Toplam " + totalTx + " TX atılacak...", "info");
+  } catch(e) {
+    log("Nonce alınamadı: " + e.message, "err");
+    resetUI(); return;
+  }
+
+  let ok = 0, err = 0;
+
+  for (let i = 0; i < totalTx; i++) {
+    if (stopFlag) { log("Kullanıcı tarafından durduruldu.", "info"); break; }
+
+    try {
+      const txid = await mintOne(privateKey, recipient, nonce + i);
+      ok++;
+      log("TX #" + (i+1) + " OK · " + txid.slice(0,20) + "...", "ok");
+    } catch(e) {
+      err++;
+      log("TX #" + (i+1) + " HATA: " + e.message, "err");
+    }
+
+    const sent    = i + 1;
+    const elapsed = Date.now() - startTime;
+    const eta     = elapsed / sent * (totalTx - sent);
+
+    document.getElementById("s-sent").textContent = sent;
+    document.getElementById("s-ok").textContent   = ok;
+    document.getElementById("s-err").textContent  = err;
+    document.getElementById("s-eta").textContent  = formatETA(eta);
+    document.getElementById("prog").style.width   = Math.round(sent / totalTx * 100) + "%";
+    document.getElementById("prog-txt").textContent = sent + " / " + totalTx;
+
+    if (i < totalTx - 1 && !stopFlag) await sleep(delay);
+  }
+
+  const total = Date.now() - startTime;
+  log("Bitti! " + ok + " başarılı, " + err + " hatalı · " + formatETA(total), ok > 0 ? "ok" : "err");
+  setStatus(stopFlag ? "Durduruldu" : "Tamamlandı", stopFlag ? "badge-stop" : "badge-done");
+  resetUI();
+}
+
+function stopMint() { stopFlag = true; }
+
+function resetUI() {
+  running = false;
+  document.getElementById("btn-start").disabled = false;
+  document.getElementById("btn-stop").style.display = "none";
+}
+</script>
+</body>
+</html>
